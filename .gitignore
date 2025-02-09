@@ -1,0 +1,41 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/youlearn-frontend/node_modules
+/youlearn-frontend/.pnp
+/youlearn-frontend/.pnp.*
+/youlearn-frontend/.yarn/*
+/youlearn-frontend/.yarn/patches
+/youlearn-frontend/.yarn/plugins
+/youlearn-frontend/.yarn/releases
+/youlearn-frontend/.yarn/versions
+
+# testing
+/youlearn-frontend/coverage
+
+# next.js
+/youlearn-frontend/.next/
+/youlearn-frontend/out/
+
+# production
+/youlearn-frontend/build
+
+# misc
+/youlearn-frontend/.DS_Store
+/youlearn-frontend/*.pem
+
+# debug
+/youlearn-frontend/npm-debug.log*
+/youlearn-frontend/yarn-debug.log*
+/youlearn-frontend/yarn-error.log*
+/youlearn-frontend/pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+/youlearn-frontend/.env*
+
+# vercel
+/youlearn-frontend/.vercel
+
+# typescript
+/youlearn-frontend/*.tsbuildinfo
+/youlearn-frontend/next-env.d.ts
