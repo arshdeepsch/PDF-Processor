@@ -20,7 +20,11 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [boundingBoxes, setBoundingBoxes] = useState<BoundingBox[]>([]);
-  const [highlightedText, setHighlightedText] = useState<string>();
+  const [highlightedText, setHighlightedText] = useState<{ 
+    text: string; 
+    page: number; 
+    bbox: [number, number, number, number];
+  }>();
   const [showPdf, setShowPdf] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,8 +43,8 @@ export default function Home() {
     }
   };
 
-  const handleTextClick = (text: string) => {
-    setHighlightedText(text);
+  const handleTextClick = (text: string, page: number, bbox: [number, number, number, number]) => {
+    setHighlightedText({ text, page, bbox });
   };
 
   return (

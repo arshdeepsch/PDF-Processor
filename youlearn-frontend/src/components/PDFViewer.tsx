@@ -10,8 +10,12 @@ import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 interface PDFViewerProps {
   url: string;
   boundingBoxes: BoundingBox[];
-  onTextClick: (text: string) => void;
-  highlightedText?: string;
+  onTextClick: (text: string, page: number, bbox: [number, number, number, number]) => void;
+  highlightedText?: { 
+    text: string; 
+    page: number; 
+    bbox: [number, number, number, number];
+  };
 }
 
 export default function PDFViewer({ url, boundingBoxes, onTextClick, highlightedText }: PDFViewerProps) {
@@ -38,11 +42,13 @@ export default function PDFViewer({ url, boundingBoxes, onTextClick, highlighted
           .filter(box => box.page === pageIndex)
           .map((box, index) => {
             const [x, y, width, height] = box.bbox;
-            const isHighlighted = box.text === highlightedText;
+            const isHighlighted = highlightedText?.text === box.text && 
+                                highlightedText?.page === box.page &&
+                                box.bbox.every((val, idx) => Math.abs(val - highlightedText.bbox[idx]) < 0.1);
             
             return (
               <div
-                key={index}
+                key={`${box.text}-${box.page}-${box.bbox.join(',')}`}
                 ref={el => {
                   if (isHighlighted) {
                     highlightRefs.current.push(el);
@@ -61,7 +67,7 @@ export default function PDFViewer({ url, boundingBoxes, onTextClick, highlighted
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onTextClick(box.text);
+                  onTextClick(box.text, box.page, box.bbox);
                 }}
               />
             );
@@ -72,7 +78,7 @@ export default function PDFViewer({ url, boundingBoxes, onTextClick, highlighted
 
   return (
     <div className="h-[800px] border border-gray-300 rounded">
-      <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+      <Worker workerUrl={`https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`}>
         <Viewer
           fileUrl={url}
           plugins={[defaultLayoutPluginInstance]}
