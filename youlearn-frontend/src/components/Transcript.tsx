@@ -1,7 +1,5 @@
-import { useMemo, useRef, useEffect, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
+import { useMemo, useRef, useEffect } from 'react';
 import { BoundingBox } from '@/services/api';
-import type { ReactNode } from 'react';
 
 interface TranscriptProps {
   boundingBoxes: BoundingBox[];
@@ -13,9 +11,19 @@ interface TranscriptProps {
   };
 }
 
+interface Section {
+  type: 'heading' | 'paragraph';
+  level?: 1 | 2 | 3;
+  box?: BoundingBox;
+  boxes?: BoundingBox[];
+}
+
+interface PageGroup {
+  sections: Section[];
+}
+
 export default function Transcript({ boundingBoxes, onTextClick, highlightedText }: TranscriptProps) {
   const highlightRef = useRef<HTMLSpanElement>(null);
-  const [currentPage, setCurrentPage] = useState(0);
   
   const markdownContent = useMemo(() => {
     const groups = boundingBoxes.reduce((acc, box) => {
@@ -24,8 +32,12 @@ export default function Transcript({ boundingBoxes, onTextClick, highlightedText
       // Handle special cases
       if (box.text === "\n") {
         if (pageGroup.sections.length > 0 && 
-            pageGroup.sections[pageGroup.sections.length - 1].type === 'paragraph') {
-          pageGroup.sections[pageGroup.sections.length - 1].boxes.push(box);
+            pageGroup.sections[pageGroup.sections.length - 1]?.type === 'paragraph' &&
+            pageGroup.sections[pageGroup.sections.length - 1]?.boxes) {
+          const lastSection = pageGroup.sections[pageGroup.sections.length - 1];
+          if (lastSection && lastSection.boxes) {
+            lastSection.boxes.push(box);
+          }
         }
         acc[box.page] = pageGroup;
         return acc;
@@ -46,14 +58,15 @@ export default function Transcript({ boundingBoxes, onTextClick, highlightedText
         if (pageGroup.sections.length === 0 || pageGroup.sections[pageGroup.sections.length - 1].type === 'heading') {
           pageGroup.sections.push({ type: 'paragraph', boxes: [] });
         }
-        if (pageGroup.sections[pageGroup.sections.length - 1].type === 'paragraph') {
-          pageGroup.sections[pageGroup.sections.length - 1].boxes.push(box);
+        const lastSection = pageGroup.sections[pageGroup.sections.length - 1];
+        if (lastSection?.type === 'paragraph' && lastSection?.boxes) {
+          lastSection?.boxes.push(box);
         }
       }
       
       acc[box.page] = pageGroup;
       return acc;
-    }, {} as Record<number, { sections: any[] }>);
+    }, {} as Record<number, PageGroup>);
 
     return Object.entries(groups)
       .sort(([a], [b]) => Number(a) - Number(b))
@@ -95,13 +108,13 @@ export default function Transcript({ boundingBoxes, onTextClick, highlightedText
                 const Component = `h${section.level}` as 'h1' | 'h2' | 'h3';
                 return (
                   <Component key={idx} className="font-bold my-4">
-                    {section.box.text}
+                    {section.box?.text}
                   </Component>
                 );
               } else {
                 return (
                   <p key={idx} className="my-3 whitespace-pre-wrap">
-                    {section.boxes.map((box: BoundingBox, textIdx: number) => {
+                    {section.boxes?.map((box: BoundingBox, textIdx: number) => {
                       const key = `${box.text}-${box.page}-${box.bbox.join(',')}-${textIdx}`;
                       
                       if (box.text === "\n") {

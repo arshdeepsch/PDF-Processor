@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Worker, Viewer, SpecialZoomLevel } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import type { BoundingBox } from '@/services/api';
@@ -19,8 +19,6 @@ interface PDFViewerProps {
 }
 
 export default function PDFViewer({ url, boundingBoxes, onTextClick, highlightedText }: PDFViewerProps) {
-  const [scale, setScale] = useState(1);
-  const [currentPage, setCurrentPage] = useState(0);
   const highlightRefs = useRef<(HTMLDivElement | null)[]>([]);
   
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
@@ -32,7 +30,13 @@ export default function PDFViewer({ url, boundingBoxes, onTextClick, highlighted
     }
   }, [highlightedText]);
 
-  const renderHighlights = (props: any) => {
+  const renderHighlights = (props: { 
+    pageIndex: number; 
+    scale: number; 
+    canvasLayer: { children?: React.ReactNode }; 
+    textLayer: { children?: React.ReactNode };
+    rotation: number;
+  }) => {
     const { pageIndex, scale: currentScale } = props;
     highlightRefs.current = [];
 
@@ -40,7 +44,7 @@ export default function PDFViewer({ url, boundingBoxes, onTextClick, highlighted
       <>
         {boundingBoxes
           .filter(box => box.page === pageIndex)
-          .map((box, index) => {
+          .map((box) => {
             const [x, y, width, height] = box.bbox;
             const isHighlighted = highlightedText?.text === box.text && 
                                 highlightedText?.page === box.page &&
@@ -103,7 +107,7 @@ export default function PDFViewer({ url, boundingBoxes, onTextClick, highlighted
           fileUrl={url}
           plugins={[defaultLayoutPluginInstance]}
           defaultScale={SpecialZoomLevel.PageFit}
-          onPageChange={(page) => setCurrentPage(page.currentPage)}
+          onPageChange={() => {}}
           renderPage={(props) => (
             <>
               {props.canvasLayer.children}
