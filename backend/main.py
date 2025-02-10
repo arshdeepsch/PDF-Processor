@@ -47,29 +47,36 @@ def download_pdf(url: str) -> bytes:
     return response.content
 
 def process_text_blocks(page, page_num) -> List[Dict]:
-    """Process text blocks with accurate bounding boxes"""
     blocks = []
     text_page = page.get_text("dict", sort=True)
+    block_counter = 0
     
     for block in text_page["blocks"]:
         if "lines" in block:
+            # Add empty line between blocks for paragraph separation
+            if blocks:
+                blocks.append(BoundingBox(
+                    text="\n",
+                    bbox=[0, block_counter, 0, block_counter],  # Unique coordinates
+                    page=page_num
+                ))
+                block_counter += 1
+            
             for line in block["lines"]:
                 if "spans" in line:
                     current_text = ""
                     current_bbox = None
                     
                     for span in line["spans"]:
-                        text = span["text"].strip()
-                        if not text:
-                            continue
-                            
+                        text = span["text"]  # Preserve whitespace
+                        
                         if current_bbox is None:
                             current_text = text
                             current_bbox = list(span["bbox"])
                         else:
                             gap = span["bbox"][0] - current_bbox[2]
                             if gap < 5:
-                                current_text += " " + text
+                                current_text += text
                                 current_bbox[2] = span["bbox"][2]
                                 current_bbox[3] = max(current_bbox[3], span["bbox"][3])
                             else:
@@ -88,6 +95,14 @@ def process_text_blocks(page, page_num) -> List[Dict]:
                             bbox=current_bbox,
                             page=page_num
                         ))
+                
+                # Add line break after each line with unique identifier
+                blocks.append(BoundingBox(
+                    text="\n",
+                    bbox=[0, block_counter, 0, block_counter],  # Unique coordinates
+                    page=page_num
+                ))
+                block_counter += 1
     
     return blocks
 

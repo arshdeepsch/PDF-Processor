@@ -68,6 +68,26 @@ export default function PDFViewer({ url, boundingBoxes, onTextClick, highlighted
                 onClick={(e) => {
                   e.stopPropagation();
                   onTextClick(box.text, box.page, box.bbox);
+                  
+                  // Give React time to update the state and find the element
+                  setTimeout(() => {
+                    const dataText = `${box.text}-${box.bbox.join(',')}-page${box.page}`;
+                    const transcriptElement = document.querySelector(`[data-text="${dataText}"]`);
+                    const container = document.querySelector('.overflow-y-auto');
+                    
+                    if (transcriptElement && container) {
+                      const elementRect = transcriptElement.getBoundingClientRect();
+                      const containerRect = container.getBoundingClientRect();
+                      
+                      // Check if element is not in view
+                      if (elementRect.top < containerRect.top || elementRect.bottom > containerRect.bottom) {
+                        transcriptElement.scrollIntoView({
+                          behavior: 'smooth',
+                          block: 'center'
+                        });
+                      }
+                    }
+                  }, 100);
                 }}
               />
             );
