@@ -1,10 +1,16 @@
 'use client';
 
+import { Metadata } from 'next';
 import { useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { api, type BoundingBox } from '@/services/api';
 import Transcript from '@/components/Transcript';
 import { debounce } from 'lodash';
+
+export const metadata: Metadata = {
+  title: 'PDF Processor',
+  description: 'Process and view PDF documents',
+};
 
 // Dynamically import PDFViewer to avoid SSR issues
 const PDFViewer = dynamic(() => import('@/components/PDFViewer'), {
