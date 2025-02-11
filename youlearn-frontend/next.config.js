@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  output: 'export',
   webpack: (config, { isServer }) => {
     // Add fallbacks for browser modules
     config.resolve.fallback = {
