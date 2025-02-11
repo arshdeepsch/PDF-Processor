@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Worker, Viewer, SpecialZoomLevel } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import type { BoundingBox } from '@/services/api';
+import { ErrorBoundary } from 'react-error-boundary';
 
 // Import styles
 import '@react-pdf-viewer/core/lib/styles/index.css';
@@ -20,8 +21,15 @@ interface PDFViewerProps {
 
 export default function PDFViewer({ url, boundingBoxes, onTextClick, highlightedText }: PDFViewerProps) {
   const highlightRefs = useRef<(HTMLDivElement | null)[]>([]);
-  
-  const defaultLayoutPluginInstance = defaultLayoutPlugin();
+  const [key, setKey] = useState(0);
+  const defaultLayoutPluginInstance = defaultLayoutPlugin({
+    sidebarTabs: () => []
+  });
+
+  // Reset viewer when URL changes
+  useEffect(() => {
+    setKey(prev => prev + 1);
+  }, [url]);
 
   useEffect(() => {
     if (highlightedText) {
@@ -38,7 +46,9 @@ export default function PDFViewer({ url, boundingBoxes, onTextClick, highlighted
     rotation: number;
   }) => {
     const { pageIndex, scale: currentScale } = props;
-    highlightRefs.current = [];
+    highlightRefs.current = highlightRefs.current.filter(ref => 
+      ref?.getAttribute('data-page') === pageIndex.toString()
+    );
 
     return (
       <>
@@ -58,6 +68,7 @@ export default function PDFViewer({ url, boundingBoxes, onTextClick, highlighted
                     highlightRefs.current.push(el);
                   }
                 }}
+                data-page={pageIndex}
                 style={{
                   position: 'absolute',
                   left: x * currentScale,
@@ -73,7 +84,6 @@ export default function PDFViewer({ url, boundingBoxes, onTextClick, highlighted
                   e.stopPropagation();
                   onTextClick(box.text, box.page, box.bbox);
                   
-                  // Give React time to update the state and find the element
                   setTimeout(() => {
                     const dataText = `${box.text}-${box.bbox.join(',')}-page${box.page}`;
                     const transcriptElement = document.querySelector(`[data-text="${dataText}"]`);
@@ -83,7 +93,6 @@ export default function PDFViewer({ url, boundingBoxes, onTextClick, highlighted
                       const elementRect = transcriptElement.getBoundingClientRect();
                       const containerRect = container.getBoundingClientRect();
                       
-                      // Check if element is not in view
                       if (elementRect.top < containerRect.top || elementRect.bottom > containerRect.bottom) {
                         transcriptElement.scrollIntoView({
                           behavior: 'smooth',
@@ -102,20 +111,25 @@ export default function PDFViewer({ url, boundingBoxes, onTextClick, highlighted
 
   return (
     <div className="h-[800px] border border-gray-300 rounded">
-      <Worker workerUrl={`https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`}>
-        <Viewer
-          fileUrl={url}
-          plugins={[defaultLayoutPluginInstance]}
-          defaultScale={SpecialZoomLevel.PageFit}
-          onPageChange={() => {}}
-          renderPage={(props) => (
-            <>
-              {props.canvasLayer.children}
-              {props.textLayer.children}
-              {renderHighlights(props)}
-            </>
-          )}
-        />
+      <Worker 
+        key={key}
+        workerUrl={`https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`}
+      >
+        <ErrorBoundary fallback={<div className="h-full flex items-center justify-center">Error loading PDF viewer</div>}>
+          <Viewer
+            fileUrl={url}
+            plugins={[defaultLayoutPluginInstance]}
+            defaultScale={SpecialZoomLevel.PageFit}
+            renderPage={(props) => (
+              <>
+                {props.canvasLayer.children}
+                {props.textLayer.children}
+                {renderHighlights(props)}
+              </>
+            )}
+            withCredentials={false}
+          />
+        </ErrorBoundary>
       </Worker>
     </div>
   );

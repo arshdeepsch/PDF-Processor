@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { api, type BoundingBox } from '@/services/api';
 import Transcript from '@/components/Transcript';
+import { debounce } from 'lodash';
 
 // Dynamically import PDFViewer to avoid SSR issues
 const PDFViewer = dynamic(() => import('@/components/PDFViewer'), {
@@ -14,6 +15,15 @@ const PDFViewer = dynamic(() => import('@/components/PDFViewer'), {
     </div>
   ),
 });
+
+const isValidUrl = (url: string) => {
+  try {
+    new URL(url);
+    return url.toLowerCase().endsWith('.pdf');
+  } catch {
+    return false;
+  }
+};
 
 export default function Home() {
   const [pdfUrl, setPdfUrl] = useState('');
@@ -27,10 +37,36 @@ export default function Home() {
   }>();
   const [showPdf, setShowPdf] = useState(false);
 
+  const validateUrl = useCallback(
+    debounce((url: string) => {
+      if (!url) {
+        setError(null);
+        return;
+      }
+      if (!isValidUrl(url)) {
+        setError('Please enter a valid PDF URL');
+        return;
+      }
+      setError(null);
+    }, 300),
+    []
+  );
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newUrl = e.target.value;
+    setPdfUrl(newUrl);
+    validateUrl(newUrl);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isValidUrl(pdfUrl)) {
+      setError('Please enter a valid PDF URL');
+      return;
+    }
     setIsLoading(true);
     setError(null);
+    setShowPdf(false);
     
     try {
       const result = await api.extractPDF(pdfUrl);
@@ -38,6 +74,7 @@ export default function Home() {
       setShowPdf(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to process PDF');
+      setShowPdf(false);
     } finally {
       setIsLoading(false);
     }
@@ -57,7 +94,7 @@ export default function Home() {
             <input
               type="url"
               value={pdfUrl}
-              onChange={(e) => setPdfUrl(e.target.value)}
+              onChange={handleUrlChange}
               placeholder="Enter PDF URL"
               className="flex-1 px-4 py-2 border border-gray-300 rounded text-black"
               required
@@ -76,7 +113,7 @@ export default function Home() {
           )}
         </form>
 
-        {showPdf && pdfUrl && (
+        {showPdf && pdfUrl && isValidUrl(pdfUrl) && (
           <div className="grid grid-cols-[2fr,1fr] gap-8">
             <PDFViewer 
               url={pdfUrl}
