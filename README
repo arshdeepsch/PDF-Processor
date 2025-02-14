@@ -1,0 +1,25 @@
+# Installation
+1. Run the backend server using docker
+```batch
+docker build -t pdf-processor .
+docker run -d -p 8000:8000 pdf-processor
+```
+or run from ./backend directory
+```batch
+python -m venv venv
+# On Windows
+venv\Scripts\activate
+# On Unix/MacOS
+source venv/bin/activate
+pip install -r ./requirements.txt
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+2. Run the frontend server using npm
+```batch
+cd frontend
+npm install
+npm run dev
+```
+
+3. Open your browser and navigate to http://localhost:3000
