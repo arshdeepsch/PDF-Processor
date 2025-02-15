@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Worker, Viewer, SpecialZoomLevel } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation';
 import type { BoundingBox } from '@/services/api';
 import { ErrorBoundary } from 'react-error-boundary';
 
 // Import styles
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+import '@react-pdf-viewer/page-navigation/lib/styles/index.css';
 
 interface PDFViewerProps {
   url: string;
@@ -22,9 +24,13 @@ interface PDFViewerProps {
 export default function PDFViewer({ url, boundingBoxes, onTextClick, highlightedText }: PDFViewerProps) {
   const highlightRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [key, setKey] = useState(0);
+  
   const defaultLayoutPluginInstance = defaultLayoutPlugin({
     sidebarTabs: () => []
   });
+
+  const pageNavigationPluginInstance = pageNavigationPlugin();
+  const { jumpToPage } = pageNavigationPluginInstance;
 
   // Reset viewer when URL changes
   useEffect(() => {
@@ -33,10 +39,27 @@ export default function PDFViewer({ url, boundingBoxes, onTextClick, highlighted
 
   useEffect(() => {
     if (highlightedText) {
-      const highlightElement = highlightRefs.current.find(ref => ref !== null);
-      highlightElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Clear previous highlight refs
+      highlightRefs.current = [];
+      
+      // Jump to the page
+      jumpToPage(highlightedText.page);
+      
+      // Wait for the page to render and scroll to highlight
+      setTimeout(() => {
+        const highlightElement = highlightRefs.current.find(ref => 
+          ref?.getAttribute('data-page') === highlightedText.page.toString()
+        );
+        
+        if (highlightElement) {
+          highlightElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+        }
+      }, 500);
     }
-  }, [highlightedText]);
+  }, [highlightedText, jumpToPage]);
 
   const renderHighlights = (props: { 
     pageIndex: number; 
@@ -46,10 +69,7 @@ export default function PDFViewer({ url, boundingBoxes, onTextClick, highlighted
     rotation: number;
   }) => {
     const { pageIndex, scale: currentScale } = props;
-    highlightRefs.current = highlightRefs.current.filter(ref => 
-      ref?.getAttribute('data-page') === pageIndex.toString()
-    );
-
+    
     return (
       <>
         {boundingBoxes
@@ -84,6 +104,7 @@ export default function PDFViewer({ url, boundingBoxes, onTextClick, highlighted
                   e.stopPropagation();
                   onTextClick(box.text, box.page, box.bbox);
                   
+                  // Add back the transcript scrolling
                   setTimeout(() => {
                     const dataText = `${box.text}-${box.bbox.join(',')}-page${box.page}`;
                     const transcriptElement = document.querySelector(`[data-text="${dataText}"]`);
@@ -118,7 +139,7 @@ export default function PDFViewer({ url, boundingBoxes, onTextClick, highlighted
         <ErrorBoundary fallback={<div className="h-full flex items-center justify-center">Error loading PDF viewer</div>}>
           <Viewer
             fileUrl={url}
-            plugins={[defaultLayoutPluginInstance]}
+            plugins={[defaultLayoutPluginInstance, pageNavigationPluginInstance]}
             defaultScale={SpecialZoomLevel.PageFit}
             renderPage={(props) => (
               <>
