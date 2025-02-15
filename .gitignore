@@ -2,42 +2,41 @@
 
 # dependencies
 /node_modules
-/youlearn-frontend/node_modules
-/youlearn-frontend/.pnp
-/youlearn-frontend/.pnp.*
-/youlearn-frontend/.yarn/*
-/youlearn-frontend/.yarn/patches
-/youlearn-frontend/.yarn/plugins
-/youlearn-frontend/.yarn/releases
-/youlearn-frontend/.yarn/versions
+/pdf-processor-frontend/node_modules
+/pdf-processor-frontend/.pnp
+/pdf-processor-frontend/.pnp.*
+/pdf-processor-frontend/.yarn/*
+/pdf-processor-frontend/.yarn/patches
+/pdf-processor-frontend/.yarn/plugins
+/pdf-processor-frontend/.yarn/releases
+/pdf-processor-frontend/.yarn/versions
 
 # testing
-/youlearn-frontend/coverage
+/pdf-processor-frontend/coverage
 
 # next.js
-/youlearn-frontend/.next/
-/youlearn-frontend/out/
+/pdf-processor-frontend/.next/
+/pdf-processor-frontend/out/
 
-# production
-/youlearn-frontend/build
+/pdf-processor-frontend/build
 
 # misc
-/youlearn-frontend/.DS_Store
-/youlearn-frontend/*.pem
+/pdf-processor-frontend/.DS_Store
+/pdf-processor-frontend/*.pem
 
 # debug
-/youlearn-frontend/npm-debug.log*
-/youlearn-frontend/yarn-debug.log*
-/youlearn-frontend/yarn-error.log*
-/youlearn-frontend/pnpm-debug.log*
+/pdf-processor-frontend/npm-debug.log*
+/pdf-processor-frontend/yarn-debug.log*
+/pdf-processor-frontend/yarn-error.log*
+/pdf-processor-frontend/pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
-/youlearn-frontend/.env*
+/pdf-processor-frontend/.env*
 
 # vercel
-/youlearn-frontend/.vercel
-/youlearn-frontend/vercel.json
+/pdf-processor-frontend/.vercel
+/pdf-processor-frontend/vercel.json
 
 # typescript
-/youlearn-frontend/*.tsbuildinfo
-/youlearn-frontend/next-env.d.ts
+/pdf-processor-frontend/*.tsbuildinfo
+/pdf-processor-frontend/next-env.d.ts
